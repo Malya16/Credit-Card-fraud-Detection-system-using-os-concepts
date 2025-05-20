@@ -1,47 +1,53 @@
-from flask import Flask, render_template, request, redirect, url_for
-import os
+from flask import Flask, request, render_template, redirect, url_for
 import csv
 from fraud_detector import detect_fraud
 
 app = Flask(__name__)
-UPLOAD_FOLDER = 'uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+flagged_transactions = []  # Store fraud transactions
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route("/")
 def index():
-    results = []
+    return render_template("index.html")
 
-    if request.method == 'POST':
-        file = request.files['file']
-        if file.filename.endswith('.csv'):
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-            file.save(filepath)
-            results = run_detection(filepath)
+@app.route("/upload", methods=["POST"])
+def upload():
+    global flagged_transactions
+    file = request.files["csvfile"]
+    if not file:
+        return "No file uploaded", 400
 
-    return render_template('index.html', results=results)
-
-def run_detection(csv_file):
     transactions = []
-    with open(csv_file, mode='r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            transaction = {
-                "TransactionID": int(row["TransactionID"]),
-                "Timestamp": row["Timestamp"],
-                "Amount": float(row["Amount"]),
-                "Location": row["Location"],
-                "CardHolderID": int(row["CardHolderID"]),
-                "MerchantID": int(row["MerchantID"]),
-                "TransactionType": row["TransactionType"],
-                "IsFraud": int(row["IsFraud"])
-            }
-            result = detect_fraud(transaction)
-            result["Status"] = "FRAUD" if result["IsFraud"] else "SAFE"
-            transactions.append(result)
-    return transactions
+    reader = csv.DictReader(file.stream.read().decode("utf-8").splitlines())
+    for row in reader:
+        txn = {
+            "TransactionID": int(row["TransactionID"]),
+            "Timestamp": row["Timestamp"],
+            "Amount": float(row["Amount"]),
+            "Location": row["Location"],
+            "CardHolderID": int(row["CardHolderID"]),
+            "MerchantID": int(row["MerchantID"]),
+            "TransactionType": row["TransactionType"],
+            "IsFraud": int(row["IsFraud"])
+        }
+        result = detect_fraud(txn)
+        if result["IsFraud"]:
+            flagged_transactions.append(result)
 
-if __name__ == '__main__':
+    return redirect(url_for("alerts"))
+
+@app.route("/alerts")
+def alerts():
+    return render_template("alerts.html", transactions=flagged_transactions)
+
+@app.route("/approve/<int:txn_id>")
+def approve(txn_id):
+    print(f"[ACTION] Transaction {txn_id} approved by user.")
+    return redirect(url_for("alerts"))
+
+@app.route("/block/<int:txn_id>")
+def block(txn_id):
+    print(f"[ACTION] Transaction {txn_id} BLOCKED by user.")
+    return redirect(url_for("alerts"))
+
+if __name__ == "__main__":
     app.run(debug=True)

@@ -1,43 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Credit Card Fraud Detection</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f2f2f2; }
-        .fraud { background-color: #ffcccc; }
-        .safe { background-color: #d4edda; }
-    </style>
+    <title>Fraud Shield</title>
 </head>
 <body>
-    <h2>Upload Transactions CSV</h2>
-    <form action="/" method="POST" enctype="multipart/form-data">
-        <input type="file" name="file" accept=".csv" required>
-        <button type="submit">Run Detection</button>
+    <h2>Upload Transaction CSV</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="csvfile" required>
+        <input type="submit" value="Upload">
     </form>
-
-    {% if results %}
-        <h3>Detection Results</h3>
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Amount</th>
-                <th>Location</th>
-                <th>Status</th>
-                <th>Reasons</th>
-            </tr>
-            {% for txn in results %}
-            <tr class="{{ 'fraud' if txn['IsFraud'] else 'safe' }}">
-                <td>{{ txn.TransactionID }}</td>
-                <td>{{ txn.OriginalTransaction.Amount }}</td>
-                <td>{{ txn.OriginalTransaction.Location }}</td>
-                <td>{{ txn.Status }}</td>
-                <td>{{ ', '.join(txn.Reasons) if txn.Reasons else 'None' }}</td>
-            </tr>
-            {% endfor %}
-        </table>
-    {% endif %}
 </body>
 </html>

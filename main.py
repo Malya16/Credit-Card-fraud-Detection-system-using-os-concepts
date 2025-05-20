@@ -1,5 +1,3 @@
-# main.py
-
 import csv
 from multiprocessing import Process
 from fraud_detector import detect_fraud

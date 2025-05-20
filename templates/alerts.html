@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fraud Alerts</title>
+</head>
+<body>
+    
+    <h2>Flagged Fraudulent Transactions</h2>
+    {% if transactions %}
+    <table border="1">
+        <tr>
+            <th>Txn ID</th><th>Amount</th><th>Location</th><th>Reason(s)</th><th>Actions</th>
+        </tr>
+        {% for txn in transactions %}
+        <tr>
+            <td>{{ txn.TransactionID }}</td>
+            <td>{{ txn.OriginalTransaction.Amount }}</td>
+            <td>{{ txn.OriginalTransaction.Location }}</td>
+            <td>{{ ", ".join(txn.Reasons) }}</td>
+            <td>
+                <a href="/approve/{{ txn.TransactionID }}">✅ Approve</a> |
+                <a href="/block/{{ txn.TransactionID }}">❌ Block</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+        <p>No fraud detected.</p>
+    {% endif %}
+
+</body>
+</html>
