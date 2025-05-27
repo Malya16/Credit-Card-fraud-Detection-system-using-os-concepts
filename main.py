@@ -1,4 +1,5 @@
 import csv
+import os
 from multiprocessing import Process
 from fraud_detector import detect_fraud
 from ipc_handler import send_to_log
@@ -39,6 +40,17 @@ def handle_transactions(transactions):
     for p in processes:
         p.join()
 
+def save_safe_transaction(transaction):
+    file_exists = os.path.isfile("safe_transactions.csv")
+    with open("safe_transactions.csv", mode='a', newline='') as file:
+        writer = csv.DictWriter(file, fieldnames=[
+            "TransactionID", "Timestamp", "Amount", "Location",
+            "CardHolderID", "MerchantID", "TransactionType"
+        ])
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(transaction)
+        
 # Entry point
 if __name__ == "__main__":
     print("[SYSTEM] Starting Fraud Shield...")

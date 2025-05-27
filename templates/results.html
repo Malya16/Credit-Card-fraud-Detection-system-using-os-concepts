@@ -1,11 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fraud Alerts</title>
+    <title>Flagged Transactions</title>
+    <script>
+        function confirmTransaction(txnId) {
+            if (confirm("⚠️ This transaction is flagged as potentially fraudulent. Do you want to proceed?")) {
+                window.location.href = "/otp/" + txnId;
+            }
+        }
+    </script>
 </head>
 <body>
-    
     <h2>Flagged Fraudulent Transactions</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
     {% if transactions %}
     <table border="1">
         <tr>
@@ -18,7 +33,7 @@
             <td>{{ txn.OriginalTransaction.Location }}</td>
             <td>{{ ", ".join(txn.Reasons) }}</td>
             <td>
-                <a href="/approve/{{ txn.TransactionID }}">✅ Approve</a> |
+                <a href="#" onclick="confirmTransaction({{ txn.TransactionID }})">✅ Approve</a> |
                 <a href="/block/{{ txn.TransactionID }}">❌ Block</a>
             </td>
         </tr>
@@ -27,6 +42,5 @@
     {% else %}
         <p>No fraud detected.</p>
     {% endif %}
-
 </body>
 </html>
